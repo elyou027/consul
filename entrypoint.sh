@@ -13,7 +13,8 @@ USER_GID=${USER_GID:-1000}
 CONSUL_GROUP=${CONSUL_GROUP:-consul}
 CONSUL_USER=${CONSUL_USER:-consul}
 CONSUL_CONFIG_DIR=${CONSUL_CONFIG_DIR:-/consul/config}
-CONSUL_DATA_DIR=${CONSUL_DATA_DIR:-/data}
+CONSUL_DATA_DIR=${CONSUL_DATA_DIR:-/consul/data}
+BACKUP_DIR=${BACKUP_DIR:-/consul/backup}
 
 ##############################################################
 # Creating user and group if needed
@@ -138,10 +139,10 @@ if [ "$1" = 'consul' ]; then
 fi
 ################################################################################
 
-if [[ ! -d $BACKUP_PATH ]]
+if [[ ! -d $BACKUP_DIR ]]
 then
-  mkdir -p $BACKUP_PATH
-  chown ${CONSUL_USER}:${CONSUL_GROUP} $BACKUP_PATH
+  mkdir -p $BACKUP_DIR
+  chown ${CONSUL_USER}:${CONSUL_GROUP} $BACKUP_DIR
 fi
 
 if [[ "$1" == "run_consul" ]]
@@ -165,24 +166,24 @@ then
 elif [[ "$1" == "backup_consul" ]]
 then
   f_name="consul.`date '+%Y-%m-%d_%H-%M-%S'`.snap"
-  consul snapshot save ${BACKUP_PATH}/$f_name
-  cp ${BACKUP_PATH}/${f_name} ${BACKUP_PATH}/consul.snap.latest
-  chown ${CONSUL_USER}:${CONSUL_GROUP} ${BACKUP_PATH}/*
+  consul snapshot save ${BACKUP_DIR}/$f_name
+  cp ${BACKUP_DIR}/${f_name} ${BACKUP_DIR}/consul.snap.latest
+  chown ${CONSUL_USER}:${CONSUL_GROUP} ${BACKUP_DIR}/*
 elif [ "$1" == "restore_consul" ]
 then
-  if [ -f ${BACKUP_PATH}/consul.snap.latest ]
+  if [ -f ${BACKUP_DIR}/consul.snap.latest ]
   then
-    f_name="${BACKUP_PATH}/consul.snap.latest"
+    f_name="${BACKUP_DIR}/consul.snap.latest"
   else
-    for f in `ls ${BACKUP_PATH} | grep '.snap'`
+    for f in `ls ${BACKUP_DIR} | grep '.snap'`
     do
       # Get last of files
-      f_name=${BACKUP_PATH}/$f
+      f_name=${BACKUP_DIR}/$f
     done
   fi
   if [ "${f_name}none" == "none" ]
   then
-    printf "${RED} Error. Do not found any snapshots in ${BACKUP_PATH} ${NC}\n"
+    printf "${RED} Error. Do not found any snapshots in ${BACKUP_DIR} ${NC}\n"
     exit 15
   fi
   printf "${Green} Restoring $f_name ${NC}\n"
