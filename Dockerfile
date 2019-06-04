@@ -1,4 +1,4 @@
-FROM consul
+FROM consul:latest
 RUN apk --no-cache -U add bash shadow sudo
 
 ENV PATH              "/usr/local/bin:${PATH}"
