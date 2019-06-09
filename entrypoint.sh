@@ -147,7 +147,7 @@ fi
 
 if [[ "$1" == "run_consul" ]]
 then
-	printf "${Green} Starting consul daemon ${NC}\n"
+	printf "${Green} Starting consul daemon in server ${NC}\n"
 	setcap "cap_net_bind_service=+ep" /bin/consul
     chown ${CONSUL_USER}:${CONSUL_GROUP} $CONSUL_DATA_DIR
 	if [[ ! -d "$CONSUL_CONFIG_DIR" ]]
@@ -163,6 +163,23 @@ then
       $CONSUL_BIND \
       $CONSUL_CLIENT \
       -bootstrap-expect=${BOOTSTRAP_NUM}
+elif [[ "$1" == "run_agent" ]]
+then
+	printf "${Green} Starting consul daemon in client mode ${NC}\n"
+	setcap "cap_net_bind_service=+ep" /bin/consul
+    chown ${CONSUL_USER}:${CONSUL_GROUP} $CONSUL_DATA_DIR
+	if [[ ! -d "$CONSUL_CONFIG_DIR" ]]
+	then
+		mkdir -p $CONSUL_CONFIG_DIR
+		chown ${CONSUL_USER}:${CONSUL_GROUP} $CONSUL_CONFIG_DIR
+	fi
+#	su-exec $CONSUL_USER consul agent \
+#  sudo -H -E -u $CONSUL_USER bash -c "consul agent \
+    exec su-exec ${CONSUL_USER}:${CONSUL_GROUP} consul agent \
+      -data-dir="$CONSUL_DATA_DIR" \
+      -config-dir="$CONSUL_CONFIG_DIR" \
+      $CONSUL_BIND \
+      $CONSUL_CLIENT }
 elif [[ "$1" == "backup_consul" ]]
 then
   f_name="consul.`date '+%Y-%m-%d_%H-%M-%S'`.snap"
