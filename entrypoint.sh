@@ -15,6 +15,8 @@ CONSUL_USER=${CONSUL_USER:-consul}
 CONSUL_CONFIG_DIR=${CONSUL_CONFIG_DIR:-/consul/config}
 CONSUL_DATA_DIR=${CONSUL_DATA_DIR:-/consul/data}
 BACKUP_DIR=${BACKUP_DIR:-/consul/backup}
+CONSUL_IP=${CONSUL_IP:-`ip addr show dev eth0 | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1`}
+CONSUL_BIND=${CONSUL_BIND:--bind=$CONSUL_IP}
 
 ##############################################################
 # Creating user and group if needed
@@ -160,7 +162,7 @@ then
     exec su-exec ${CONSUL_USER}:${CONSUL_GROUP} consul agent -server \
       -data-dir="$CONSUL_DATA_DIR" \
       -config-dir="$CONSUL_CONFIG_DIR" \
-      $CONSUL_BIND \
+      -bind ${CONSUL_IP} \
       $CONSUL_CLIENT \
       -bootstrap-expect=${BOOTSTRAP_NUM}
 elif [[ "$1" == "run_client" ]] || [[ "$1" == "run_agent" ]]
@@ -178,8 +180,8 @@ then
     exec su-exec ${CONSUL_USER}:${CONSUL_GROUP} consul agent \
       -data-dir="$CONSUL_DATA_DIR" \
       -config-dir="$CONSUL_CONFIG_DIR" \
-      -bind ${CONSUL_BIND} \
-      -client ${CONSUL_CLIENT}
+      -bind=${CONSUL_BIND} \
+      -client=${CONSUL_CLIENT}
 elif [[ "$1" == "backup_consul" ]]
 then
   f_name="consul.`date '+%Y-%m-%d_%H-%M-%S'`.snap"
